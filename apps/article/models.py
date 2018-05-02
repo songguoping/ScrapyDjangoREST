@@ -10,7 +10,7 @@ class Article(models.Model):
     url = models.CharField(max_length=100, verbose_name='链接')
     url_object_id = models.CharField(max_length=50, verbose_name='链接md5值')
     tags = models.CharField(max_length=20, verbose_name='标签')
-    content = UEditorField(verbose_name='内容', default='')
+    content = UEditorField(verbose_name='内容', default='',null=True)
     front_image_url = models.CharField(max_length=300,null=True, verbose_name='封面图片链接')
     front_image_path = models.ImageField(upload_to='article/images/full', null=True, blank=True, verbose_name='封面图')
     comment_nums = models.IntegerField(default=0, verbose_name='评论数')

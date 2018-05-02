@@ -20,7 +20,8 @@ class ArticlePagination(PageNumberPagination):
     max_page_size = 100
 
 
-class ArticleListViewSet(CacheResponseMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+class ArticleListViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet,
+                         mixins.UpdateModelMixin):
     """
     文章列表页 分页 搜索 过滤 排序
     """
@@ -31,3 +32,7 @@ class ArticleListViewSet(CacheResponseMixin, mixins.ListModelMixin, mixins.Retri
     filter_backends = (DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
     search_fields = ('name', 'goods_brief', 'goods_desc')
     ordering_fields = ('praise_nums', 'create_date')
+
+    def put(self, request, *args, **kwargs):
+
+        return self.update(request, *args, **kwargs)
