@@ -8,8 +8,8 @@ from rest_framework import viewsets
 
 from rest_framework_extensions.cache.mixins import CacheResponseMixin
 
-from .models import Article
-from .seriallzers import ArticleSerializer
+from .models import Article,ArticleTag
+from .seriallzers import ArticleSerializer,TagSerializer
 
 
 # Create your views here.
@@ -36,3 +36,14 @@ class ArticleListViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, views
     def put(self, request, *args, **kwargs):
 
         return self.update(request, *args, **kwargs)
+
+
+class TagViewset(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
+    """
+    list:
+        文章标签列表数据
+    retrieve:
+        获取商品标签详情
+    """
+    queryset = ArticleTag.objects.filter(tag_type=1)
+    serializer_class = TagSerializer

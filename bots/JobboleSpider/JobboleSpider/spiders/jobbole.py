@@ -4,7 +4,7 @@ import re
 from scrapy.http import Request
 from urllib import parse
 
-from JobboleSpider.items import JobBoleArticleItem, ArticleItemLoader
+from JobboleSpider.items import JobBoleArticleItem, JobBoleArticleTagItem, ArticleItemLoader
 from JobboleSpider.utils.common import get_md5
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy import signals
@@ -37,19 +37,42 @@ class JobboleSpider(scrapy.Spider):
             self.fail_urls.append(response.url)
             self.crawler.stats.inc_value("failed_url")
 
-        # 解析到url
-        post_nodes = response.css("#archive .floated-thumb .post-thumb a")
-        for post_node in post_nodes:
-            image_url = post_node.css("img::attr(src)").extract_first("")
-            post_url = post_node.css("::attr(href)").extract_first("")
-            yield Request(url=parse.urljoin(response.url, post_url), meta={"front_image_url": image_url},
-                          callback=self.parse_detail)
+        item_loader = ArticleItemLoader(item=JobBoleArticleTagItem(), response=response)
 
-        # 提取下一页并交给scrapy下载
-        next_url = response.css(".next.page-numbers::attr(href)").extract_first("")
-        if next_url:
-            yield Request(url=parse.urljoin(response.url, next_url), callback=self.parse)
-        pass
+        post_nodes = response.css("#main-nav-menu > li")
+        for index in range(len(post_nodes)):
+            post_node = post_nodes[index]
+            item_loader.add_value("name", post_node.css("a::text").extract_first(""))
+            item_loader.add_value("url", post_node.css("a::attr(href)").extract_first(""))
+            item_loader.add_value("tag_type", 1)
+            item_loader.add_value("id", index)
+            # title = post_node.css("a::text").extract_first("")
+            print("title " + post_node.css("a::text").extract_first(""))
+            sub_nodes = post_node.css("ul li")
+            for sub_index in sub_nodes:
+                item_loader.add_value("name", post_node.css("a::text").extract_first(""))
+                item_loader.add_value("url", post_node.css("a::attr(href)").extract_first(""))
+                item_loader.add_value("tag_type", 2)
+                #item_loader.add_value("id", sub_index + index + 1)
+                item_loader.add_value("parent_tag_id", index)
+                # sub_title = sub_node.css("a::text").extract_first("")
+                # print("sub_title " + sub_title)
+        item = item_loader.load_item()
+        # 将item路由到pipelines
+        yield item
+        # # 解析到文章url
+        # post_nodes = response.css("#archive .floated-thumb .post-thumb a")
+        # for post_node in post_nodes:
+        #     image_url = post_node.css("img::attr(src)").extract_first("")
+        #     post_url = post_node.css("::attr(href)").extract_first("")
+        #     yield Request(url=parse.urljoin(response.url, post_url), meta={"front_image_url": image_url},
+        #                   callback=self.parse_detail)
+        #
+        # # 提取下一页并交给scrapy下载
+        # next_url = response.css(".next.page-numbers::attr(href)").extract_first("")
+        # if next_url:
+        #     yield Request(url=parse.urljoin(response.url, next_url), callback=self.parse)
+        # pass
 
     def parse_detail(self, response):
         # 提取文章的具体字段
@@ -71,3 +94,29 @@ class JobboleSpider(scrapy.Spider):
         article_item = item_loader.load_item()
         # 将item路由到pipelines
         yield article_item
+
+    def parse_tags(self, response):
+        print('prase tag')
+        item_loader = ArticleItemLoader(item=JobBoleArticleTagItem(), response=response)
+
+        post_nodes = response.css("#main-nav-menu > li")
+        for index in range(len(post_nodes)):
+            post_node = post_nodes[index]
+            item_loader.add_css("name", "a::text").extract_first("")
+            item_loader.add_css("url", "a::attr(href)").extract_first("")
+            item_loader.add_value("tag_type", 1)
+            item_loader.add_value("id", index)
+            # title = post_node.css("a::text").extract_first("")
+            print("title " + item_loader.add_css("name", "a::text").extract_first(""))
+            sub_nodes = post_node.css("ul li")
+            for sub_index in sub_nodes:
+                item_loader.add_css("name", "a::text").extract_first("")
+                item_loader.add_css("url", "a::attr(href)").extract_first("")
+                item_loader.add_value("tag_type", 2)
+                item_loader.add_value("id", sub_index + index + 1)
+                item_loader.add_value("parent_tag_id", index)
+                # sub_title = sub_node.css("a::text").extract_first("")
+                # print("sub_title " + sub_title)
+        item = item_loader.load_item()
+        # 将item路由到pipelines
+        yield item

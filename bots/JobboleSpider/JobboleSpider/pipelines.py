@@ -67,6 +67,7 @@ class MysqlTwistedPipline(object):
 
     def handle_error(self, failure, item, spider):
         # 处理异步插入的异常
+        print('handle_error')
         print(failure)
 
     def do_insert(self, cursor, item):

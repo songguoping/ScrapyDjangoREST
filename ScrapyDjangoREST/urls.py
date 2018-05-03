@@ -22,11 +22,13 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken import views
 from rest_framework_jwt.views import obtain_jwt_token
 
-from article.views import ArticleListViewSet
+from article.views import ArticleListViewSet, TagViewset
 
 router = DefaultRouter()
 # 配置goods的url
 router.register(r'article', ArticleListViewSet, base_name="article")
+# 配置tag的url
+router.register(r'tags', TagViewset, base_name="tags")
 
 urlpatterns = [
     url(r'^xadmin/', xadmin.site.urls),

@@ -84,8 +84,7 @@ class JobBoleArticleItem(scrapy.Item):
     def make_data_clean(self):
         front_image_url = ""
         # content = remove_tags(self["content"])
-        self["crawl_time"] = datetime.datetime.now(
-        ).strftime(SQL_DATETIME_FORMAT)
+        self["crawl_time"] = datetime.datetime.now().strftime(SQL_DATETIME_FORMAT)
         if self["front_image_url"]:
             self["front_image_url"] = self["front_image_url"][0]
         str = self["create_date"].strip().replace("·", "").strip()
@@ -119,6 +118,34 @@ class JobBoleArticleItem(scrapy.Item):
             self["comment_nums"],
             self["tags"],
             self["content"],
+            self["crawl_time"]
+        )
+        return insert_sql, params
+
+
+class JobBoleArticleTagItem(scrapy.Item):
+    name = scrapy.Field()
+    url = scrapy.Field()
+    tag_type = scrapy.Field()
+    id = scrapy.Field()
+    parent_tag_id = scrapy.Field()
+    crawl_time = scrapy.Field()
+
+    def make_data_clean(self):
+        self["crawl_time"] = datetime.datetime.now().strftime(SQL_DATETIME_FORMAT)
+
+    def get_insert_sql(self):
+        insert_sql = """
+               insert into article_articletag(name, url, tag_type,id, parent_tag_id,crawl_time)
+               VALUES (%s, %s, %s,%s, %s, %s) ON DUPLICATE KEY UPDATE name=VALUES(name),url=VALUES(url),tag_type=VALUES(tag_type),crawl_time=VALUES(crawl_time),parent_tag_id=VALUES(parent_tag_id)
+           """
+        self.make_data_clean()
+        params = (
+            self["name"],
+            self["url"],
+            self["tag_type"],
+            self["id"],
+            self["parent_tag_id"],
             self["crawl_time"]
         )
         return insert_sql, params
